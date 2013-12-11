@@ -5,20 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
-	"os"
-	"path/filepath"
 	"strings"
-	"text/template"
 	"unicode/utf8"
 )
 
 var (
-	NewLine        string = "\r\n"
-	TemplateFolder string = "templates"
-	MailTemplate   *template.Template
+	NewLine string = "\r\n"
 )
 
 type Message struct {
@@ -212,36 +206,4 @@ Content-Transfer-Encoding: 8bit
 `
 	_, err := b.WriteString(fmt.Sprintf(contentTypeFormat, writer.Boundary(), contentType))
 	return err
-}
-
-func compileTemplates() (*template.Template, error) {
-	t := template.New(TemplateFolder)
-	err := filepath.Walk(TemplateFolder, func(path string, info os.FileInfo, err error) error {
-		r, err := filepath.Rel(TemplateFolder, path)
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() {
-			buf, err := ioutil.ReadFile(path)
-			if err != nil {
-				return err
-			}
-
-			tmpl := t.New(filepath.ToSlash(r))
-
-			template.Must(tmpl.Parse(string(buf)))
-		}
-
-		return nil
-	})
-	return t, err
-}
-
-func init() {
-	var err error
-	MailTemplate, err = compileTemplates()
-	if err != nil {
-		panic(err)
-	}
 }

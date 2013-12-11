@@ -241,6 +241,10 @@ http://www.arkxu.com
 `
 	mailer := &Mailer{Server: "smtp.gmail.com", Port: 587, UserName: "foo@bar.com", Password: "xxx"}
 	mailer.Sender = &Sender{From: "sender@foo.com"}
+	err := TemplateFolder("testdata")
+	if err != nil {
+		panic(err)
+	}
 
 	// arguments used for template rendering
 	var args = make(map[string]interface{})
@@ -254,7 +258,7 @@ http://www.arkxu.com
 	}
 
 	message := &Message{To: []string{"to1@test1.com"}, Subject: "from template 6", Cc: []string{"to2@gmail.com"}}
-	err := message.RenderTemplate("f2/testTemplate", args)
+	err = message.RenderTemplate("f2/testTemplate", args)
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -1,7 +1,11 @@
 package gomail
 
 import (
+	"io/ioutil"
 	"net/smtp"
+	"os"
+	"path/filepath"
+	"text/template"
 )
 
 type MailSender interface {
@@ -23,6 +27,8 @@ type Sender struct {
 	ReplyTo string
 }
 
+var MailTemplate *template.Template
+
 // Send the given email messages using this Mailer.
 func (m *Mailer) SendMessage(messages ...*Message) (err error) {
 	if m.Auth == nil {
@@ -43,6 +49,30 @@ func (m *Mailer) SendMessage(messages ...*Message) (err error) {
 	}
 
 	return
+}
+
+func TemplateFolder(templateFolder string) error {
+	MailTemplate = template.New(templateFolder)
+	err := filepath.Walk(templateFolder, func(path string, info os.FileInfo, err error) error {
+		r, err := filepath.Rel(templateFolder, path)
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			buf, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			tmpl := MailTemplate.New(filepath.ToSlash(r))
+
+			template.Must(tmpl.Parse(string(buf)))
+		}
+
+		return nil
+	})
+	return err
 }
 
 func (m *Mailer) fillDefault(message *Message) {
